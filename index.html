@@ -30,6 +30,7 @@
         var room;
         var gate = true;
         var manover = false;
+        var seeked=false;
         var socket = io.connect(window.location.origin);
         socket.on('connect', () => {
             console.log("Connected");
@@ -115,6 +116,10 @@
 
 
                 vid.addEventListener("pause", () => {
+                    if (manover || seeked) {
+                        manover = false;
+                        return;
+                    }
                     socket.emit("controls", {
                         action: "pause",
                         id: socket.id,
@@ -123,6 +128,12 @@
                     });
                 });
                 vid.addEventListener("play", () => {
+                    if (manover) {
+                        manover = false;
+                        return;
+                    }
+                    if(seeked)
+                       seeked=false;
                         socket.emit("controls", {
                             action: "play",
                             id: socket.id,
@@ -146,7 +157,6 @@
                 });
 
                 socket.on("controlUpdate", (obj) => {
-                    console.log(obj);
 
                     if (obj.id === socket.id)
                         return;
@@ -154,7 +164,7 @@
                     if (obj.action === "play") {
                         manover = true;
                         vid.currentTime = obj.currentTime;
-                        vid.play();
+                        vid.play().catch();
                     }
                     if (obj.action === "pause") {
                         manover = true;
@@ -162,7 +172,8 @@
                         vid.pause();
                     }
                     if (obj.action === "seek") {
-                        manover = true
+                        manover = true;
+                        seeked=true;
                         vid.currentTime = obj.seektime;
                     }
 
@@ -171,8 +182,8 @@
 
             });
 
-            socket.on('userstat',function(e){
-                 sel("#live").innerHTML=e;  
+            socket.on('userstat',function(no){
+                 sel("#live").innerHTML=no;  
             });
 
 
@@ -190,6 +201,10 @@
 
         function sel(d) {
             return document.querySelector(d);
+        }
+
+        function error(){
+
         }
     </script>
 
