@@ -28,7 +28,7 @@ io.on("connection",(socket)=>{
 
     socket.on("end",()=>{
         socket.leave(socket.room);
-        socket.emit("userstat",io.sockets.adapter.rooms[d]);
+        socket.emit("userstat",io.sockets.adapter.rooms[d].length);
     })
 });
 
