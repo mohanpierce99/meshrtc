@@ -157,7 +157,7 @@
                     if (obj.action === "play") {
                         manover = true;
                         vid.currentTime = obj.currentTime;
-                        vid.play();
+                        vid.play().catch(console.error);
                     }
                     if (obj.action === "pause") {
                         manover = true;
