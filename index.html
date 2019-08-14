@@ -130,15 +130,15 @@
                             room,
                             currentTime: vid.currentTime
                         });
-                        gate = true;
                     }
+                    gate = true;
                 });
                 vid.addEventListener("seeked", () => {
+                    gate = false;
                     if (manover) {
                         manover = false;
                         return;
                     }
-                    gate = false;
                     console.log("seeked");
                     socket.emit("controls", {
                         action: "seek",
