@@ -123,7 +123,7 @@
                     });
                 });
                 vid.addEventListener("play", () => {
-                    alert(gate);
+                    console.log(gate);
                     if (gate) {
                         socket.emit("controls", {
                             action: "play",
@@ -150,11 +150,9 @@
                 });
 
                 socket.on("controlUpdate", (obj) => {
-                    console.log(obj);
 
                     if (obj.id === socket.id)
                         return;
-                    console.log(obj);
                     if (obj.action === "play") {
                         manover = true;
                         vid.currentTime = obj.currentTime;
