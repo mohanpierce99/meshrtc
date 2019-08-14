@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <video controls width="400" height="400">
+        <source src="inter.mp4" type="video/mp4">
+    </video>
+    <h3>Unique ID</h3>
+    <h4 class="head"></h4>
+    <h4>Messages : Peer to peer chat</h4>
+    <input type="text">
+    <button>Send</button>
+    <span id="conn">Connected to : </span>
+    <div id="wrapper">
+
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/peerjs@0.3.20/dist/peer.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var vid = document.querySelector("video");
+        var mypeers = [];
+        var room;
+        var gate = true;
+        var manover = false;
+        var socket = io.connect(window.location.origin);
+        socket.on('connect', () => {
+            console.log("Connected");
+            let room = prompt("Enter the room");
+
+            socket.emit("joinroom", room);
+            console.log("Server:controls");
+
+            socket.on("roomjoined", () => {
+                console.log("Rroom joined");
+
+                var peer = new Peer({
+                    config: {
+                        'iceServers': [{
+                            url: 'stun:stun.l.google.com:19302'
+                        }]
+                    }
+                }, {
+                    debug: 2
+                });
+
+                peer.on("connection", (c) => {
+                    sel("#conn").innerHTML += c.peer + ",";
+                    mypeers.push(c);
+                    console.log(c);
+                    console.log("pushed");
+                    c.on('data', function (data) {
+                            console.log("hittedma");
+                            inject(newchip(`Peer message, ${data}`));
+                        });
+                });
+
+                peer.on('open', (id) => {
+                    console.log("id generated");
+                    peer.id = id;
+                    sel(".head").innerHTML=id;
+                    socket.emit("signal", {
+                        room,
+                        id
+                    });
+                });
+
+                peer.on('data', function (data) {
+                    console.log("hittedma");
+                    inject(newchip(`! Peer message, ${data}`));
+                });
+
+                socket.on("signalnewclient", (d) => {
+                    console.log(d + "signalled");
+                    if (d == peer.id) {
+                        console.log("hit oops");
+                        return;
+                    }
+                    var conn = peer.connect(d);
+                    console.log("peer added");
+                    conn.on('open', function () {
+                        console.log("connectedtopeer");
+                        console.log(conn);
+                        mypeers.push(conn);
+                        console.log("pushed to no of peers");
+                        sel("#conn").innerHTML += conn.peer + ",";
+                        conn.on('data', function (data) {
+                            console.log("hittedma");
+                            inject(newchip(`Peer message, ${data}`));
+                        });
+
+                    });
+
+
+
+                });
+
+                sel("button").addEventListener("click", () => {
+                    let data = sel("input").value;
+                    inject(newchip(data));
+                    mypeers.forEach((p) => {
+
+                        p.send(data);
+                        console.log("Sent data to"+p.peer);
+                    });
+                })
+
+
+
+                vid.addEventListener("pause", () => {
+                    gate = true;
+                    socket.emit("controls", {
+                        action: "pause",
+                        id: socket.id,
+                        room,
+                        currentTime: vid.currentTime
+                    });
+                });
+                vid.addEventListener("play", () => {
+                    if (gate) {
+                        socket.emit("controls", {
+                            action: "play",
+                            id: socket.id,
+                            room,
+                            currentTime: vid.currentTime
+                        });
+                        gate = true;
+                    }
+                });
+                vid.addEventListener("seeked", () => {
+                    if (manover) {
+                        manover = false;
+                        return;
+                    }
+                    gate = false;
+                    console.log("seeked");
+                    socket.emit("controls", {
+                        action: "seek",
+                        seektime: vid.currentTime,
+                        id: socket.id,
+                        room
+                    })
+                });
+
+                socket.on("controlUpdate", (obj) => {
+                    console.log(obj);
+
+                    if (obj.id === socket.id)
+                        return;
+                    console.log(obj);
+                    if (obj.action === "play") {
+                        manover = true;
+                        vid.currentTime = obj.currentTime;
+                        vid.play();
+                    }
+                    if (obj.action === "pause") {
+                        manover = true;
+                        vid.currentTime = obj.currentTime;
+                        vid.pause();
+                    }
+                    if (obj.action === "seek") {
+                        manover = true
+                        vid.currentTime = obj.seektime;
+                    }
+
+                })
+
+
+            });
+
+        });
+
+        function newchip(d) {
+            let temp = document.createElement("p");
+            temp.innerHTML = d;
+            return temp;
+        }
+
+        function inject(el) {
+            let area = sel("#wrapper");
+            area.appendChild(el);
+            return;
+        }
+
+        function sel(d) {
+            return document.querySelector(d);
+        }
+    </script>
+
+</body>
+
+</html>
