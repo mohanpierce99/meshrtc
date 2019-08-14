@@ -12,6 +12,7 @@
     <video controls width="400" height="400">
         <source src="inter.mp4" type="video/mp4">
     </video>
+    <h4>Online users in room : <span id="live"></span></h4>
     <h3>Unique ID</h3>
     <h4 class="head"></h4>
     <h4>Messages : Peer to peer chat</h4>
@@ -37,7 +38,7 @@
             socket.emit("joinroom", room);
             console.log("Server:controls");
 
-            socket.on("roomjoined", () => {
+            socket.on("userstat", () => {
                 console.log("Rroom joined");
 
                 var peer = new Peer({
@@ -114,7 +115,6 @@
 
 
                 vid.addEventListener("pause", () => {
-                    gate = true;
                     socket.emit("controls", {
                         action: "pause",
                         id: socket.id,
@@ -123,14 +123,12 @@
                     });
                 });
                 vid.addEventListener("play", () => {
-                    if (gate) {
                         socket.emit("controls", {
                             action: "play",
                             id: socket.id,
                             room,
                             currentTime: vid.currentTime
                         });
-                        gate = true;
                     }
                 });
                 vid.addEventListener("seeked", () => {
@@ -138,7 +136,6 @@
                         manover = false;
                         return;
                     }
-                    gate = false;
                     console.log("seeked");
                     socket.emit("controls", {
                         action: "seek",
@@ -172,6 +169,10 @@
                 })
 
 
+            });
+
+            socket.on('userstat',function(e){
+                 sel("#live").innerHTML=e;  
             });
 
         });

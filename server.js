@@ -11,7 +11,7 @@ io.on("connection",(socket)=>{
     socket.on("joinroom",(d)=>{
         socket.room=d;
         socket.join(d);
-        socket.emit("roomjoined",true)
+        socket.emit("userstat",io.sockets.adapter.rooms[d]);
         console.log("Socket joined rooom : "+d);
     });
 
@@ -28,6 +28,7 @@ io.on("connection",(socket)=>{
 
     socket.on("end",()=>{
         socket.leave(socket.room);
+        socket.emit("userstat",io.sockets.adapter.rooms[d]);
     })
 });
 
