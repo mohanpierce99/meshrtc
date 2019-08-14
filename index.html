@@ -123,6 +123,7 @@
                     });
                 });
                 vid.addEventListener("play", () => {
+                    alert(gate);
                     if (gate) {
                         socket.emit("controls", {
                             action: "play",
