@@ -105,7 +105,7 @@
                             inject(newchip(`Peer message, ${data}`));
                         });
                         callPeer(conn.peer);
-                        
+
 
                     });
 
@@ -187,7 +187,26 @@
                     vid.currentTime = obj.seektime;
                 }
 
-            })
+            });
+
+            function callPeer(id) {
+                var call = peer.call(id, window.localstream);
+                call.on('stream', function (stream) {
+                    var audioCtx = new AudioContext();
+                    var source = audioCtx.createMediaStreamSource(stream);
+                    source.connect(audioCtx.destination);
+                });
+
+            }
+
+            peer.on('call', function (call) {
+                call.answer(window.localstream);
+                call.on('stream', function (stream) {
+                    var audioCtx = new AudioContext();
+                    var source = audioCtx.createMediaStreamSource(stream);
+                    source.connect(audioCtx.destination);
+                });
+            });
 
 
         });
@@ -197,24 +216,7 @@
             sel("#live").innerHTML = no;
         });
 
-        function callPeer(id) {
-            var call = peer.call(id, window.localstream);
-            call.on('stream', function (stream) {
-                var audioCtx = new AudioContext();
-                var source = audioCtx.createMediaStreamSource(stream);
-                source.connect(audioCtx.destination);
-            });
 
-        }
-
-        peer.on('call', function (call) {
-             call.answer(window.localstream);
-             call.on('stream', function (stream) {
-                var audioCtx = new AudioContext();
-                var source = audioCtx.createMediaStreamSource(stream);
-                source.connect(audioCtx.destination);
-            });
-        });
 
         function newchip(d) {
             let temp = document.createElement("p");
