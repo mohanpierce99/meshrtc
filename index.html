@@ -30,8 +30,15 @@
         var room;
         var gate = true;
         var manover = false;
-        var seeked=false;
+        var seeked = false;
         var socket = io.connect(window.location.origin);
+
+        navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: false
+        }, function (stream) {
+            window.localstream = stream;
+        });
         socket.on('connect', () => {
             console.log("Connected");
             let room = prompt("Enter the room");
@@ -58,15 +65,15 @@
                     console.log(c);
                     console.log("pushed");
                     c.on('data', function (data) {
-                            console.log("hittedma");
-                            inject(newchip(`Peer message, ${data}`));
-                        });
+                        console.log("hittedma");
+                        inject(newchip(`Peer message, ${data}`));
+                    });
                 });
 
                 peer.on('open', (id) => {
                     console.log("id generated");
                     peer.id = id;
-                    sel(".head").innerHTML=id;
+                    sel(".head").innerHTML = id;
                     socket.emit("signal", {
                         room,
                         id
@@ -90,12 +97,15 @@
                         console.log("connectedtopeer");
                         console.log(conn);
                         mypeers.push(conn);
+
                         console.log("pushed to no of peers");
                         sel("#conn").innerHTML += conn.peer + ",";
                         conn.on('data', function (data) {
                             console.log("hittedma");
                             inject(newchip(`Peer message, ${data}`));
                         });
+                        callPeer(conn.peer);
+                        
 
                     });
 
@@ -107,9 +117,8 @@
                     let data = sel("input").value;
                     inject(newchip(data));
                     mypeers.forEach((p) => {
-
                         p.send(data);
-                        console.log("Sent data to"+p.peer);
+                        console.log("Sent data to" + p.peer);
                     });
                 })
 
@@ -118,7 +127,7 @@
                 vid.addEventListener("pause", () => {
                     if (manover || seeked) {
                         manover = false;
-                        seeked=false;
+                        seeked = false;
                         return;
                     }
                     socket.emit("controls", {
@@ -133,61 +142,79 @@
                         manover = false;
                         return;
                     }
-                    if(seeked)
-                       seeked=false;
-                        socket.emit("controls", {
-                            action: "play",
-                            id: socket.id,
-                            room,
-                            currentTime: vid.currentTime
-                        });
+                    if (seeked)
+                        seeked = false;
+                    socket.emit("controls", {
+                        action: "play",
+                        id: socket.id,
+                        room,
+                        currentTime: vid.currentTime
                     });
                 });
-                vid.addEventListener("seeked", () => {
-                    if (manover) {
-                        manover = false;
-                        return;
-                    }
-                    console.log("seeked");
-                    socket.emit("controls", {
-                        action: "seek",
-                        seektime: vid.currentTime,
-                        id: socket.id,
-                        room
-                    })
-                });
-
-                socket.on("controlUpdate", (obj) => {
-
-                    if (obj.id === socket.id)
-                        return;
-                    console.log(obj);
-                    if (obj.action === "play") {
-                        manover = true;
-                        vid.currentTime = obj.currentTime;
-                        vid.play().catch();
-                    }
-                    if (obj.action === "pause") {
-                        manover = true;
-                        vid.currentTime = obj.currentTime;
-                        vid.pause();
-                    }
-                    if (obj.action === "seek") {
-                        manover = true;
-                        seeked=true;
-                        vid.currentTime = obj.seektime;
-                    }
-
+            });
+            vid.addEventListener("seeked", () => {
+                if (manover) {
+                    manover = false;
+                    return;
+                }
+                console.log("seeked");
+                socket.emit("controls", {
+                    action: "seek",
+                    seektime: vid.currentTime,
+                    id: socket.id,
+                    room
                 })
-
-
             });
 
-            socket.on('userstat',function(no){
-                console.log(no);
-                 sel("#live").innerHTML=no;  
+            socket.on("controlUpdate", (obj) => {
+
+                if (obj.id === socket.id)
+                    return;
+                console.log(obj);
+                if (obj.action === "play") {
+                    manover = true;
+                    vid.currentTime = obj.currentTime;
+                    vid.play().catch();
+                }
+                if (obj.action === "pause") {
+                    manover = true;
+                    vid.currentTime = obj.currentTime;
+                    vid.pause();
+                }
+                if (obj.action === "seek") {
+                    manover = true;
+                    seeked = true;
+                    vid.currentTime = obj.seektime;
+                }
+
+            })
+
+
+        });
+
+        socket.on('userstat', function (no) {
+            console.log(no);
+            sel("#live").innerHTML = no;
+        });
+
+        function callPeer(id) {
+            var call = peer.call(id, window.localstream);
+            call.on('stream', function (stream) {
+                var audioCtx = new AudioContext();
+                var source = audioCtx.createMediaStreamSource(stream);
+                source.connect(audioCtx.destination);
             });
 
+        }
+
+        peer.on('call', function (call) {
+             call.answer(window.localstream);
+             call.on('stream', function (stream) {
+                var audioCtx = new AudioContext();
+                var source = audioCtx.createMediaStreamSource(stream);
+                source.connect(audioCtx.destination);
+            });
+        });
 
         function newchip(d) {
             let temp = document.createElement("p");
@@ -205,7 +232,7 @@
             return document.querySelector(d);
         }
 
-        function error(){
+        function error() {
 
         }
     </script>
