@@ -22,6 +22,11 @@
     <div id="wrapper">
 
     </div>
+
+    <div id="wrapper1">
+    
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/peerjs@0.3.20/dist/peer.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
@@ -29,6 +34,7 @@
         var mypeers = [];
         var room;
         var gate = true;
+        
         var manover = false;
         var seeked = false;
         var socket = io.connect(window.location.origin);
@@ -88,12 +94,12 @@
                 }
 
                 peer.on('call', function (call) {
-                    console.log(call);
-                    console.log("on call");
+                    inject(newchip(call),"wrapper1");
+                    inject(newchip("on call"),"wrapper1");
                     call.answer(window.localstream);
-                    console.log("asnwered")
+                    inject(newchip("answered"),"wrapper1");
                     call.on('stream', function (stream) {
-                        console.log("received stream")
+                        inject(newchip("received stream"),"wrapper1");
                         console.log(stream);
                         var audioCtx = new AudioContext();
                         var source = audioCtx.createMediaStreamSource(stream);
@@ -228,8 +234,8 @@
             return temp;
         }
 
-        function inject(el) {
-            let area = sel("#wrapper");
+        function inject(el,data) {
+            let area = sel("#wrapper"||data);
             area.appendChild(el);
             return;
         }
