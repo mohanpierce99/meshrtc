@@ -39,12 +39,7 @@
         var seeked = false;
         var socket = io.connect(window.location.origin);
 
-        navigator.mediaDevices.getUserMedia({
-            audio: true,
-            video: false
-        }, function (stream) {
-            window.localstream = stream;
-        });
+        
         socket.on('connect', () => {
             console.log("Connected");
             let room = prompt("Enter the room");
@@ -89,20 +84,25 @@
 
                 function callPeer(id) {
                     console.log(id + "call");
-                    var call = peer.call(id, window.localstream);
-                  
+                    var call;
+                    navigator.mediaDevices.getUserMedia({
+            audio: true,
+                    }).then((stream)=>{
+                       call = peer.call(id,stream);
+                    })
                 }
 
                 peer.on('call', function (call) {
+                    inject(newchip("call received"));
                     inject(newchip(call),"wrapper1");
                     inject(newchip("on call"),"wrapper1");
-                    call.answer(window.localstream);
+                    call.answer();
                     inject(newchip("answered"),"wrapper1");
                     call.on('stream', function (stream) {
                         inject(newchip("received stream"),"wrapper1");
                         console.log(stream);
                         var audioCtx = new AudioContext();
-                        var source = audioCtx.createMediaStreamSource(stream);
+                        window.source = audioCtx.createMediaStreamSource(stream);
                         source.connect(audioCtx.destination);
                     });
                 });
@@ -131,6 +131,7 @@
                             console.log("hittedma");
                             inject(newchip(`Peer message, ${data}`));
                         });
+
                         callPeer(conn.peer);
 
 
@@ -235,7 +236,7 @@
         }
 
         function inject(el,data) {
-            let area = sel("#wrapper"||data);
+            let area = sel(data||"#wrapper");
             area.appendChild(el);
             return;
         }
