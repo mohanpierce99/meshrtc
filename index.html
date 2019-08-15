@@ -84,13 +84,7 @@
                 function callPeer(id) {
                     console.log(id + "call");
                     var call = peer.call(id, window.localstream);
-                    call.on('stream', function (stream) {
-                        console.log(stream);
-                        var audioCtx = new AudioContext();
-                        var source = audioCtx.createMediaStreamSource(stream);
-                        source.connect(audioCtx.destination);
-                    });
-
+                  
                 }
 
                 peer.on('call', function (call) {
