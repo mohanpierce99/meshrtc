@@ -82,23 +82,30 @@
 
 
                 function callPeer(id) {
-                var call = peer.call(id, window.localstream);
-                call.on('stream', function (stream) {
-                    var audioCtx = new AudioContext();
-                    var source = audioCtx.createMediaStreamSource(stream);
-                    source.connect(audioCtx.destination);
-                });
+                    console.log(id + "call");
+                    var call = peer.call(id, window.localstream);
+                    call.on('stream', function (stream) {
+                        console.log(stream);
+                        var audioCtx = new AudioContext();
+                        var source = audioCtx.createMediaStreamSource(stream);
+                        source.connect(audioCtx.destination);
+                    });
 
-            }
+                }
 
-            peer.on('call', function (call) {
-                call.answer(window.localstream);
-                call.on('stream', function (stream) {
-                    var audioCtx = new AudioContext();
-                    var source = audioCtx.createMediaStreamSource(stream);
-                    source.connect(audioCtx.destination);
+                peer.on('call', function (call) {
+                    console.log(call);
+                    console.log("on call");
+                    call.answer(window.localstream);
+                    console.log("asnwered")
+                    call.on('stream', function (stream) {
+                        console.log("received stream")
+                        console.log(stream);
+                        var audioCtx = new AudioContext();
+                        var source = audioCtx.createMediaStreamSource(stream);
+                        source.connect(audioCtx.destination);
+                    });
                 });
-            });
 
                 peer.on('data', function (data) {
                     console.log("hittedma");
@@ -209,7 +216,7 @@
 
             });
 
-            
+
 
 
         });
