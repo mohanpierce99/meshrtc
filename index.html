@@ -118,6 +118,7 @@
                 vid.addEventListener("pause", () => {
                     if (manover || seeked) {
                         manover = false;
+                        seeked=false;
                         return;
                     }
                     socket.emit("controls", {
