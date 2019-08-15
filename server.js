@@ -11,7 +11,7 @@ io.on("connection",(socket)=>{
     socket.on("joinroom",(d)=>{
         socket.room=d;
         socket.join(d);
-        socket.emit("userstat",io.sockets.adapter.rooms[d]);
+        socket.emit("userstat",io.sockets.adapter.rooms[d].length);
         console.log("Socket joined rooom : "+d);
     });
 
