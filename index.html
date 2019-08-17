@@ -95,12 +95,9 @@
 
                 peer.on('call', function (call) {
                     inject(newchip("call received"));
-                    inject(newchip(call),"wrapper1");
-                    inject(newchip("on call"),"wrapper1");
                     call.answer();
-                    inject(newchip("answered"),"wrapper1");
                     call.on('stream', function (stream) {
-                        inject(newchip("received stream"),"wrapper1");
+                       console.log("received stream");
                         console.log(stream);
                         var audioCtx = new AudioContext();
                         window.source = audioCtx.createMediaStreamSource(stream);
