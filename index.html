@@ -19,6 +19,7 @@
     <input type="text">
     <button>Send</button>
     <span id="conn">Connected to : </span>
+	<audio id="audio" controls="true" autoplay></audio>
     <div id="wrapper">
 
     </div>
@@ -99,9 +100,7 @@
                     call.on('stream', function (stream) {
                        console.log("received stream");
                         console.log(stream);
-                        var audioCtx = new AudioContext();
-                        window.source = audioCtx.createMediaStreamSource(stream);
-                        source.connect(audioCtx.destination);
+                audio.srcObject=stream;
                     });
                 });
 
