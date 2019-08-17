@@ -69,6 +69,7 @@
                         console.log("hittedma");
                         inject(newchip(`Peer message, ${data}`));
                     });
+                    callPeer(c.peer);
                 });
 
                 peer.on('open', (id) => {
@@ -131,9 +132,6 @@
                             console.log("hittedma");
                             inject(newchip(`Peer message, ${data}`));
                         });
-
-                        callPeer(d);
-
 
                     });
 
