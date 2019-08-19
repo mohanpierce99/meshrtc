@@ -26,7 +26,7 @@ io.on("connection",(socket)=>{
     io.sockets.in(obj.room).emit("controlUpdate",obj);
     });
 
-    socket.on("end",()=>{
+    socket.on("disconnect",()=>{
         socket.leave(socket.room);
         socket.emit("userstat",io.sockets.adapter.rooms[d].length);
     })
