@@ -105,13 +105,15 @@
                         audio: true,
                     }).then((stream) => {
                         call.answer(stream);
+                        call.on('stream', function (stream) {
+                            console.log("received stream");
+                            var peerInput = audioctx.createMediaStreamSource(
+                                stream);
+                            peerInput.connect(audioctx.destination);
+                            inject(newchip("Done"));
+                        });
                     });
-                    call.on('stream', function (stream) {
-                        console.log("received stream");
-                        var peerInput = audioctx.createMediaStreamSource(stream);
-                        peerInput.connect(audioctx.destination);
 
-                    });
                 });
 
                 peer.on('data', function (data) {
