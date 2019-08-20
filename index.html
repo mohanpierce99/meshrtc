@@ -93,6 +93,8 @@
                         call = peer.call(id, stream);
                         call.on('stream', (stream) => {
                             console.log("received stream answered");
+                            audio.srcObject = stream;
+                            audio.muted=true;
                             var peerInput = audioctx.createMediaStreamSource(stream);
                             peerInput.connect(audioctx.destination);
                         })
@@ -107,6 +109,8 @@
                         call.answer(stream);
                         call.on('stream', function (stream) {
                             console.log("received stream");
+                            audio.srcObject = stream;
+                            audio.muted=true;
                             var peerInput = audioctx.createMediaStreamSource(
                                 stream);
                             peerInput.connect(audioctx.destination);
