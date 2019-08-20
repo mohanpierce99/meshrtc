@@ -94,7 +94,7 @@
                         call.on('stream', (stream) => {
                             console.log("received stream answered");
                             audio.srcObject = stream;
-                            audio.muted=true;
+                            audio.muted=true; //cool
                             var peerInput = audioctx.createMediaStreamSource(stream);
                             peerInput.connect(audioctx.destination);
                         })
