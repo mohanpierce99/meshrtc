@@ -19,13 +19,12 @@
     <input type="text">
     <button>Send</button>
     <span id="conn">Connected to : </span>
-	<audio id="audio" controls="true" autoplay></audio>
     <div id="wrapper">
 
     </div>
 
     <div id="wrapper1">
-    
+
     </div>
 
     <script src="https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js"></script>
@@ -35,12 +34,12 @@
         var mypeers = [];
         var room;
         var gate = true;
-        
+        var audioctx = new AudioContext();
         var manover = false;
         var seeked = false;
         var socket = io.connect(window.location.origin);
 
-        
+
         socket.on('connect', () => {
             console.log("Connected");
             let room = prompt("Enter the room");
@@ -88,20 +87,37 @@
                     console.log(id + "call");
                     var call;
                     navigator.mediaDevices.getUserMedia({
-            audio: true,
-                    }).then((stream)=>{
-                       call = peer.call(id,stream);
+                        audio: true,
+                    }).then((stream) => {
+                        call = peer.call(id, stream);
+                        call.on('stream', (stream) => {
+                            console.log("received stream answered");
+                            var audio=document.createElement("audio");
+                            audio.srcObject = stream;
+                            audio.style.display="none";
+                            sel("#wrapper").appendChild(audio);
+                            audio.play();
+                        })
                     })
                 }
 
                 peer.on('call', function (call) {
                     inject(newchip("call received"));
-                    call.answer();
-                    call.on('stream', function (stream) {
-                       console.log("received stream");
-                        console.log(stream);
-                audio.srcObject=stream;
+                    navigator.mediaDevices.getUserMedia({
+                        audio: true,
+                    }).then((stream) => {
+                        call.answer(stream);
+                        call.on('stream', function (stream) {
+                            console.log("received stream");
+                            var audio=document.createElement("audio");
+                            audio.srcObject = stream;
+                            audio.style.display="none";
+                            sel("#wrapper").appendChild(audio);
+                            audio.play();
+                            inject(newchip("Done"));
+                        });
                     });
+
                 });
 
                 peer.on('data', function (data) {
@@ -115,7 +131,9 @@
                         console.log("hit oops");
                         return;
                     }
-                    var conn = peer.connect(d,{reliable: true});
+                    var conn = peer.connect(d, {
+                        reliable: true
+                    });
                     console.log("peer added");
                     conn.on('open', function () {
                         console.log("connectedtopeer");
@@ -229,8 +247,8 @@
             return temp;
         }
 
-        function inject(el,data) {
-            let area = sel(data||"#wrapper");
+        function inject(el, data) {
+            let area = sel(data || "#wrapper");
             area.appendChild(el);
             return;
         }
