@@ -9,6 +9,7 @@ app.use(express.static("./"));
 io.on("connection",(socket)=>{
     
     socket.on("joinroom",(d)=>{
+        console.log("new applicant")
         console.log(d);
         socket.room=d;
         socket.join(d);
