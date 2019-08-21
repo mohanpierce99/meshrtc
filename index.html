@@ -19,7 +19,6 @@
     <input type="text">
     <button>Send</button>
     <span id="conn">Connected to : </span>
-    <audio id="audio" controls="true" autoplay></audio>
     <div id="wrapper">
 
     </div>
@@ -93,10 +92,10 @@
                         call = peer.call(id, stream);
                         call.on('stream', (stream) => {
                             console.log("received stream answered");
+                            var audio=document.createElement("audio");
                             audio.srcObject = stream;
-                            audio.muted=true; //cool
-                            var peerInput = audioctx.createMediaStreamSource(stream);
-                            peerInput.connect(audioctx.destination);
+                            audio.style.display="none";
+                            sel("#wrapper").appendChild(audio);
                         })
                     })
                 }
@@ -109,11 +108,10 @@
                         call.answer(stream);
                         call.on('stream', function (stream) {
                             console.log("received stream");
+                            var audio=document.createElement("audio");
                             audio.srcObject = stream;
-                            audio.muted=true;
-                            var peerInput = audioctx.createMediaStreamSource(
-                                stream);
-                            peerInput.connect(audioctx.destination);
+                            audio.style.display="none";
+                            sel("#wrapper").appendChild(audio);
                             inject(newchip("Done"));
                         });
                     });
