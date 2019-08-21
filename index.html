@@ -9,6 +9,8 @@
 </head>
 
 <body>
+    <input id="roomtxt" type="text" placeholder="Enter room" autofocus="on">
+    <button id="roombtn">ENTER</button>
     <video controls width="400" height="400">
         <source src="inter.mp4" type="video/mp4">
     </video>
@@ -42,203 +44,208 @@
 
         socket.on('connect', () => {
             console.log("Connected");
-            let room = prompt("Enter the room");
+            document.querySelector("#roombtn").addEventListener('click', () => {
+                var room = document.querySelector("#roomtxt").value;
+                
+                socket.emit("joinroom", room);
+                console.log("Server:controls");
 
-            socket.emit("joinroom", room);
-            console.log("Server:controls");
+                socket.on("userstat", () => {
+                    console.log("Room joined");
 
-            socket.on("userstat", () => {
-                console.log("Rroom joined");
-
-                var peer = new Peer({
-                    config: {
-                        'iceServers': [{
-                            url: 'stun:stun.l.google.com:19302'
-                        }]
-                    }
-                }, {
-                    debug: 2
-                });
-
-                peer.on("connection", (c) => {
-                    sel("#conn").innerHTML += c.peer + ",";
-                    mypeers.push(c);
-                    console.log(c);
-                    console.log("pushed");
-                    c.on('data', function (data) {
-                        console.log("hittedma");
-                        inject(newchip(`Peer message, ${data}`));
-                    });
-                    callPeer(c.peer);
-                });
-
-                peer.on('open', (id) => {
-                    console.log("id generated");
-                    peer.id = id;
-                    sel(".head").innerHTML = id;
-                    socket.emit("signal", {
-                        room,
-                        id
-                    });
-                });
-
-
-                function callPeer(id) {
-                    console.log(id + "call");
-                    var call;
-                    navigator.mediaDevices.getUserMedia({
-                        audio: true,
-                    }).then((stream) => {
-                        call = peer.call(id, stream);
-                        call.on('stream', (stream) => {
-                            console.log("received stream answered");
-                            var audio=document.createElement("audio");
-                            audio.srcObject = stream;
-                            audio.style.display="none";
-                            sel("#wrapper").appendChild(audio);
-                            audio.play();
-                        })
-                    })
-                }
-
-                peer.on('call', function (call) {
-                    inject(newchip("call received"));
-                    navigator.mediaDevices.getUserMedia({
-                        audio: true,
-                    }).then((stream) => {
-                        call.answer(stream);
-                        call.on('stream', function (stream) {
-                            console.log("received stream");
-                            var audio=document.createElement("audio");
-                            audio.srcObject = stream;
-                            audio.style.display="none";
-                            sel("#wrapper").appendChild(audio);
-                            audio.play();
-                            inject(newchip("Done"));
-                        });
+                    var peer = new Peer({
+                        config: {
+                            'iceServers': [{
+                                url: 'stun:stun.l.google.com:19302'
+                            }]
+                        }
+                    }, {
+                        debug: 2
                     });
 
-                });
-
-                peer.on('data', function (data) {
-                    console.log("hittedma");
-                    inject(newchip(`! Peer message, ${data}`));
-                });
-
-                socket.on("signalnewclient", (d) => {
-                    console.log(d + "signalled");
-                    if (d == peer.id) {
-                        console.log("hit oops");
-                        return;
-                    }
-                    var conn = peer.connect(d, {
-                        reliable: true
-                    });
-                    console.log("peer added");
-                    conn.on('open', function () {
-                        console.log("connectedtopeer");
-                        console.log(conn);
-                        mypeers.push(conn);
-
-                        console.log("pushed to no of peers");
-                        sel("#conn").innerHTML += conn.peer + ",";
-                        conn.on('data', function (data) {
-                            console.log("hittedma");
+                    peer.on("connection", (c) => {
+                        sel("#conn").innerHTML += c.peer + ",";
+                        mypeers.push(c);
+                        console.log(c);
+                        console.log("pushed");
+                        c.on('data', function (data) {
+                            console.log("hit");
                             inject(newchip(`Peer message, ${data}`));
                         });
+                        callPeer(c.peer);
+                    });
 
+                    peer.on('open', (id) => {
+                        console.log("id generated");
+                        peer.id = id;
+                        sel(".head").innerHTML = id;
+                        socket.emit("signal", {
+                            room,
+                            id
+                        });
                     });
 
 
-
-                });
-
-                sel("button").addEventListener("click", () => {
-                    let data = sel("input").value;
-                    inject(newchip(data));
-                    mypeers.forEach((p) => {
-                        p.send(data);
-                        console.log("Sent data to" + p.peer);
-                    });
-                })
-
-
-
-                vid.addEventListener("pause", () => {
-                    if (manover || seeked) {
-                        manover = false;
-                        seeked = false;
-                        return;
+                    function callPeer(id) {
+                        console.log(id + "call");
+                        var call;
+                        navigator.mediaDevices.getUserMedia({
+                            audio: true,
+                        }).then((stream) => {
+                            call = peer.call(id, stream);
+                            call.on('stream', (stream) => {
+                                console.log("received stream answered");
+                                var audio = document.createElement("audio");
+                                audio.srcObject = stream;
+                                audio.style.display = "none";
+                                sel("#wrapper").appendChild(audio);
+                                audio.play();
+                            })
+                        })
                     }
-                    socket.emit("controls", {
-                        action: "pause",
-                        id: socket.id,
-                        room,
-                        currentTime: vid.currentTime
+
+                    peer.on('call', function (call) {
+                        inject(newchip("call received"));
+                        navigator.mediaDevices.getUserMedia({
+                            audio: true,
+                        }).then((stream) => {
+                            call.answer(stream);
+                            call.on('stream', function (stream) {
+                                console.log("received stream");
+                                var audio = document.createElement(
+                                    "audio");
+                                audio.srcObject = stream;
+                                audio.style.display = "none";
+                                sel("#wrapper").appendChild(audio);
+                                audio.play();
+                                inject(newchip("Done"));
+                            });
+                        });
+
+                    });
+
+                    peer.on('data', function (data) {
+                        console.log("hittedma");
+                        inject(newchip(`! Peer message, ${data}`));
+                    });
+
+                    socket.on("signalnewclient", (d) => {
+                        console.log(d + "signalled");
+                        if (d == peer.id) {
+                            console.log("hit oops");
+                            return;
+                        }
+                        var conn = peer.connect(d, {
+                            reliable: true
+                        });
+                        console.log("peer added");
+                        conn.on('open', function () {
+                            console.log("connectedtopeer");
+                            console.log(conn);
+                            mypeers.push(conn);
+
+                            console.log("pushed to no of peers");
+                            sel("#conn").innerHTML += conn.peer + ",";
+                            conn.on('data', function (data) {
+                                console.log("hittedma");
+                                inject(newchip(
+                                `Peer message, ${data}`));
+                            });
+
+                        });
+
+
+
+                    });
+
+                    sel("button").addEventListener("click", () => {
+                        let data = sel("input").value;
+                        inject(newchip(data));
+                        mypeers.forEach((p) => {
+                            p.send(data);
+                            console.log("Sent data to" + p.peer);
+                        });
+                    })
+
+
+
+                    vid.addEventListener("pause", () => {
+                        if (manover || seeked) {
+                            manover = false;
+                            seeked = false;
+                            return;
+                        }
+                        socket.emit("controls", {
+                            action: "pause",
+                            id: socket.id,
+                            room,
+                            currentTime: vid.currentTime
+                        });
+                    });
+                    vid.addEventListener("play", () => {
+                        if (manover) {
+                            manover = false;
+                            return;
+                        }
+                        if (seeked)
+                            seeked = false;
+                        socket.emit("controls", {
+                            action: "play",
+                            id: socket.id,
+                            room,
+                            currentTime: vid.currentTime
+                        });
                     });
                 });
-                vid.addEventListener("play", () => {
+                vid.addEventListener("seeked", () => {
                     if (manover) {
                         manover = false;
                         return;
                     }
-                    if (seeked)
-                        seeked = false;
+                    console.log("seeked");
                     socket.emit("controls", {
-                        action: "play",
+                        action: "seek",
+                        seektime: vid.currentTime,
                         id: socket.id,
-                        room,
-                        currentTime: vid.currentTime
-                    });
+                        room
+                    })
                 });
-            });
-            vid.addEventListener("seeked", () => {
-                if (manover) {
-                    manover = false;
-                    return;
-                }
-                console.log("seeked");
-                socket.emit("controls", {
-                    action: "seek",
-                    seektime: vid.currentTime,
-                    id: socket.id,
-                    room
-                })
-            });
 
-            socket.on("controlUpdate", (obj) => {
+                socket.on("controlUpdate", (obj) => {
 
-                if (obj.id === socket.id)
-                    return;
-                console.log(obj);
-                if (obj.action === "play") {
-                    manover = true;
-                    vid.currentTime = obj.currentTime;
-                    vid.play().catch();
-                }
-                if (obj.action === "pause") {
-                    manover = true;
-                    vid.currentTime = obj.currentTime;
-                    vid.pause();
-                }
-                if (obj.action === "seek") {
-                    manover = true;
-                    seeked = true;
-                    vid.currentTime = obj.seektime;
-                }
+                    if (obj.id === socket.id)
+                        return;
+                    console.log(obj);
+                    if (obj.action === "play") {
+                        manover = true;
+                        vid.currentTime = obj.currentTime;
+                        vid.play().catch();
+                    }
+                    if (obj.action === "pause") {
+                        manover = true;
+                        vid.currentTime = obj.currentTime;
+                        vid.pause();
+                    }
+                    if (obj.action === "seek") {
+                        manover = true;
+                        seeked = true;
+                        vid.currentTime = obj.seektime;
+                    }
+
+                });
+
+
+
 
             });
 
+            socket.on('userstat', function (no) {
+                console.log(no);
+                sel("#live").innerHTML = no;
+            });
 
 
-
-        });
-
-        socket.on('userstat', function (no) {
-            console.log(no);
-            sel("#live").innerHTML = no;
-        });
-
+        })
 
 
         function newchip(d) {
