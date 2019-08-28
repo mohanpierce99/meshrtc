@@ -140,6 +140,7 @@ function isBuffered(currentTime) {
 }
 
 videoPlayer.onseeking = function () {
+	document.querySelector("body").innerHTML += !(isBuffered(videoPlayer.currentTime));
 	syncmode = !(isBuffered(videoPlayer.currentTime))
 	if (videoControlFlag) {
 		var videoinfo = {
