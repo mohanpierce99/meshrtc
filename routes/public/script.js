@@ -177,18 +177,20 @@ function handleOnData(jsonString) {
 	}
 	if (data.videoData && videoControlFlag) {
 
-		var videoinfo = data.videoData.videoinfo
+		var videoinfo = data.videoData.videoinfo;
+		console.log(videoinfo);
 		if (videoinfo.event === "played") {
 			videoControlFlag = false;
-			videoPlayer.play();
+			videoPlayer.play().catch(() => {
+				videoPlayer.play()
+			});
 		}
 
 		if (videoinfo.event === "paused") {
 			videoControlFlag = false;
-			videoPlayer.pause();
-			setTimeout(function () {
-				videoControlFlag = true;
-			}, 500);
+			videoPlayer.pause().catch(() => {
+				videoPlayer.pause()
+			});
 		}
 
 		if (videoinfo.event === "seeked") {
