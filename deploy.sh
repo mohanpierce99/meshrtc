@@ -1,3 +1,3 @@
 git add .
 git commit -m "fix"
-git push heroku master
+git push heroku upgrade:master
