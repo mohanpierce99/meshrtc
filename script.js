@@ -182,7 +182,6 @@ function handleOnData(jsonString) {
             videoControlFlag = false;
             videoPlayer.play();
         }
-        alert("new");
         if (videoinfo.event === "paused") {
             videoControlFlag = false;
             videoPlayer.pause();
