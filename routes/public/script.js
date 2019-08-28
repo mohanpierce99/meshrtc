@@ -183,7 +183,7 @@ function handleOnData(jsonString) {
 			videoPlayer.play();
 		}
 
-		if (vvideoinfo.event === "paused") {
+		if (videoinfo.event === "paused") {
 			videoControlFlag = false;
 			videoPlayer.pause();
 			setTimeout(function () {
