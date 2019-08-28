@@ -359,7 +359,7 @@ socket.on('connect', async function () {
 		});
 
 		//CALL PEER
-		if (!stopcall) {
+		if (stopcall) {
 			var call = await peer.call(data.peerid, window.stream);
 		}
 		//CALL METHODS
