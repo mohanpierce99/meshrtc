@@ -1,67 +1,40 @@
-/*
-roomStat - send {room, usercount}
-userDisconnecting - send {socketid}
-newSignal - send {socketid, peerid}
-
-//MULTI INSTANCE SAME BROWSER - CRASH / LAM ONLY(TURN)
-*/
-
-const express = require('express');
-const socketIO = require('socket.io');
-const http = require('http');
-const https = require('https');
 const fs = require('fs');
-const path = require('path');
+const express = require('express');
+const app = express();
+var server = require("http").Server(app);
+let io = require("socket.io")(server);
 
-//CONFIG VARIABLES
-const PORT = process.env.PORT || 3000;
-const IP4 = "192.168.1.100";
+app.use(express.static("./"));
 
-var app = express();
-var httpServer = http.Server(app);
-var io = socketIO(httpServer); 
+io.on("connection", (socket) => {
 
-app.use("/",express.static(path.join(__dirname,'/routes/public/')));
-
-//SOCKET HANDLING
-io.on("connection",async (socket)=>{
-	console.log("+ CONNECTED: ",socket.id);
-
-	//ROOM
-	socket.on("joinRoom",async (data)=>{
-		socket.room = data.roomName;
-		await socket.join(socket.room);
-		io.to(socket.room).emit('roomStat',{room: socket.room, usercount: io.sockets.adapter.rooms[socket.room].length});
-		console.log(`++  ${socket.id} JOINING |${socket.room}|`);
+	socket.on("joinroom", (d) => {
+		console.log("new applicant")
+		console.log(d);
+		socket.room = d;
+		socket.join(d);
+		socket.emit("userstat", io.sockets.adapter.rooms[d].length);
+		console.log("Socket joined rooom : " + d);
 	});
 
-	//GET SIGNAL AND EMIT TO ROOM
-	socket.on('signal', async (data)=>{
-		socket.peerid = data.peerid;
-		socket.broadcast.to(socket.room).emit('newSignal',{socketid: socket.id, peerid: socket.peerid});
-		console.log(`~~ SOCKETID: ${socket.id} | PEERID: ${socket.peerid}`)
+	socket.on("signal", (obj) => {
+		console.log("Signalled" + obj.id);
+		io.sockets.in(obj.room).emit("signalnewclient", obj.id);
+	})
+
+	socket.on("controls", (obj) => {
+		console.log("Server:controls");
+
+		io.sockets.in(obj.room).emit("controlUpdate", obj);
 	});
 
-	socket.on('returnSignal', (data)=>{
-		socket.broadcast.to(data.destSocket).emit('newReturnSignal',{socketid: socket.id, peerid: data.peerid});
-	});
-
-	socket.on('leaving', async (data)=>{
-		socket.broadcast.to(socket.room).emit('newLeaving',{leftPeerid: data.peerid});
-		socket.broadcast.to(socket.room).emit('roomStat',{room: socket.room, usercount: io.sockets.adapter.rooms[socket.room].length-1});
-		await socket.leave(socket.room);
-		console.log(`--  ${socket.id} LEAVING |${socket.room}|`);
-	});
-
-	//HANDLE DISCONNECTION
-	socket.on("disconnect",async ()=>{
-		if(socket.room && io.sockets.adapter.rooms[socket.room]){
-			socket.broadcast.to(socket.room).emit('newLeaving',{leftPeerid: socket.peerid});
-			socket.broadcast.to(socket.room).emit('roomStat',{room: socket.room, usercount: io.sockets.adapter.rooms[socket.room].length});
-			//await socket.leave(socket.room);
-		}
-		console.log("- DISCONNECTED: ",socket.id);
-	});
+	socket.on("disconnect", () => {
+		socket.leave(socket.room);
+		socket.emit("userstat", io.sockets.adapter.rooms[socket.room].length);
+	})
 });
 
-httpServer.listen(PORT, ()=>{console.log(`HTTP SERVER UP ON PORT: ${PORT}`);});
+
+
+
+server.listen(process.env.PORT || 3300);
