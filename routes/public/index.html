@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>VR</title>
+</head>
+<body>
+	<h3 id="connectedCounter"></h3>
+	<div>
+		<input type="text" id="roomName" placeholder="Enter room name" name="roomName" autofocus="true">
+		<button id="roomJoinButton">JOIN</button>
+	</div><br><br>
+
+	<video id="videoPlayer" controls="true" src="./video.mp4" width="420" height="240"></video>
+
+	<div id="messageContainer" style="display: none;">
+		<div id="messages"></div>
+		<input id="messageSendText" type="text" name="messageSend" placeholder="Enter message">
+		<button id="messageSendButton" onclick="sendMessage()">SEND</button>
+	</div><br><br>
+
+	<div id="audioCalls"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="./peermin.js"></script>
+	<script type="text/javascript" src="./script.js"></script>
+</body>
+</html>

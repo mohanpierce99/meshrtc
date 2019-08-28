@@ -1,274 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-</head>
-
-<body>
-    <input id="roomtxt" type="text" placeholder="Enter room" autofocus="on">
-    <button id="roombtn">ENTER</button>
-    <video controls width="400" height="400">
-        <source src="inter.mp4" type="video/mp4">
-    </video>
-    <h4>Online users in room : <span id="live"></span></h4>
-    <h3>Unique ID</h3>
-    <h4 class="head"></h4>
-    <h4>Messages : Peer to peer chat</h4>
-    <input type="text">
-    <button>Send</button>
-    <span id="conn">Connected to : </span>
-    <div id="wrapper">
-
+<html>
+  <head>
+    <title>VR</title>
+  </head>
+  <body>
+    <h3 id="connectedCounter"></h3>
+    <div>
+      <input
+        type="text"
+        id="roomName"
+        placeholder="Enter room name"
+        name="roomName"
+        autofocus="true"
+      />
+      <button id="roomJoinButton">JOIN</button>
     </div>
+    <br /><br />
 
-    <div id="wrapper1">
+    <video
+      id="videoPlayer"
+      controls="true"
+      src="./video.mp4"
+      width="420"
+      height="240"
+    ></video>
 
+    <div id="messageContainer" style="display: none;">
+      <div id="messages"></div>
+      <input
+        id="messageSendText"
+        type="text"
+        name="messageSend"
+        placeholder="Enter message"
+      />
+      <button id="messageSendButton" onclick="sendMessage()">SEND</button>
     </div>
+    <br /><br />
 
-    <script src="https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js"></script>
+    <div id="audioCalls"></div>
+
     <script src="/socket.io/socket.io.js"></script>
-    <script>
-        var vid = document.querySelector("video");
-        var mypeers = [];
-        var room;
-        var gate = true;
-        var audioctx = new AudioContext();
-        var manover = false;
-        var seeked = false;
-        var socket = io.connect(window.location.origin);
-
-
-        socket.on('connect', () => {
-            console.log("Connected");
-            document.querySelector("#roombtn").addEventListener('click', () => {
-                var room = document.querySelector("#roomtxt").value;
-                
-                socket.emit("joinroom", room);
-                console.log("Server:controls");
-
-                socket.on("userstat", () => {
-                    console.log("Room joined");
-
-                    var peer = new Peer({
-                        config: {
-                            'iceServers': [{
-                                url: 'stun:stun.l.google.com:19302'
-                            }]
-                        }
-                    }, {
-                        debug: 2
-                    });
-
-                    peer.on("connection", (c) => {
-                        sel("#conn").innerHTML += c.peer + ",";
-                        mypeers.push(c);
-                        console.log(c);
-                        console.log("pushed");
-                        c.on('data', function (data) {
-                            console.log("hit");
-                            inject(newchip(`Peer message, ${data}`));
-                        });
-                        callPeer(c.peer);
-                    });
-
-                    peer.on('open', (id) => {
-                        console.log("id generated");
-                        peer.id = id;
-                        sel(".head").innerHTML = id;
-                        socket.emit("signal", {
-                            room,
-                            id
-                        });
-                    });
-
-
-                    function callPeer(id) {
-                        console.log(id + "call");
-                        var call;
-                        navigator.mediaDevices.getUserMedia({
-                            audio: true,
-                        }).then((stream) => {
-                            call = peer.call(id, stream);
-                            call.on('stream', (stream) => {
-                                console.log("received stream answered");
-                                var audio = document.createElement("audio");
-                                audio.srcObject = stream;
-                                audio.style.display = "none";
-                                sel("#wrapper").appendChild(audio);
-                                audio.play();
-                            })
-                        })
-                    }
-
-                    peer.on('call', function (call) {
-                        inject(newchip("call received"));
-                        navigator.mediaDevices.getUserMedia({
-                            audio: true,
-                        }).then((stream) => {
-                            call.answer(stream);
-                            call.on('stream', function (stream) {
-                                console.log("received stream");
-                                var audio = document.createElement(
-                                    "audio");
-                                audio.srcObject = stream;
-                                audio.style.display = "none";
-                                sel("#wrapper").appendChild(audio);
-                                audio.play();
-                                inject(newchip("Done"));
-                            });
-                        });
-
-                    });
-
-                    peer.on('data', function (data) {
-                        console.log("hittedma");
-                        inject(newchip(`! Peer message, ${data}`));
-                    });
-
-                    socket.on("signalnewclient", (d) => {
-                        console.log(d + "signalled");
-                        if (d == peer.id) {
-                            console.log("hit oops");
-                            return;
-                        }
-                        var conn = peer.connect(d, {
-                            reliable: true
-                        });
-                        console.log("peer added");
-                        conn.on('open', function () {
-                            console.log("connectedtopeer");
-                            console.log(conn);
-                            mypeers.push(conn);
-
-                            console.log("pushed to no of peers");
-                            sel("#conn").innerHTML += conn.peer + ",";
-                            conn.on('data', function (data) {
-                                console.log("hittedma");
-                                inject(newchip(
-                                `Peer message, ${data}`));
-                            });
-
-                        });
-
-
-
-                    });
-
-                    sel("button").addEventListener("click", () => {
-                        let data = sel("input").value;
-                        inject(newchip(data));
-                        mypeers.forEach((p) => {
-                            p.send(data);
-                            console.log("Sent data to" + p.peer);
-                        });
-                    })
-
-
-
-                    vid.addEventListener("pause", () => {
-                        if (manover || seeked) {
-                            manover = false;
-                            seeked = false;
-                            return;
-                        }
-                        socket.emit("controls", {
-                            action: "pause",
-                            id: socket.id,
-                            room,
-                            currentTime: vid.currentTime
-                        });
-                    });
-                    vid.addEventListener("play", () => {
-                        if (manover) {
-                            manover = false;
-                            return;
-                        }
-                        if (seeked)
-                            seeked = false;
-                        socket.emit("controls", {
-                            action: "play",
-                            id: socket.id,
-                            room,
-                            currentTime: vid.currentTime
-                        });
-                    });
-                });
-                vid.addEventListener("seeked", () => {
-                    if (manover) {
-                        manover = false;
-                        return;
-                    }
-                    console.log("seeked");
-                    socket.emit("controls", {
-                        action: "seek",
-                        seektime: vid.currentTime,
-                        id: socket.id,
-                        room
-                    })
-                });
-
-                socket.on("controlUpdate", (obj) => {
-
-                    if (obj.id === socket.id)
-                        return;
-                    console.log(obj);
-                    if (obj.action === "play") {
-                        manover = true;
-                        vid.currentTime = obj.currentTime;
-                        vid.play().catch();
-                    }
-                    if (obj.action === "pause") {
-                        manover = true;
-                        vid.currentTime = obj.currentTime;
-                        vid.pause();
-                    }
-                    if (obj.action === "seek") {
-                        manover = true;
-                        seeked = true;
-                        vid.currentTime = obj.seektime;
-                    }
-
-                });
-
-
-
-
-            });
-
-            socket.on('userstat', function (no) {
-                console.log(no);
-                sel("#live").innerHTML = no;
-            });
-
-
-        })
-
-
-        function newchip(d) {
-            let temp = document.createElement("p");
-            temp.innerHTML = d;
-            return temp;
-        }
-
-        function inject(el, data) {
-            let area = sel(data || "#wrapper");
-            area.appendChild(el);
-            return;
-        }
-
-        function sel(d) {
-            return document.querySelector(d);
-        }
-
-        function error() {
-
-        }
-    </script>
-
-</body>
-
+    <script type="text/javascript" src="./peermin.js"></script>
+    <script type="text/javascript" src="./script.js"></script>
+  </body>
 </html>
