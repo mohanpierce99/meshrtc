@@ -8,6 +8,7 @@ leaving - send {peerid}
 */
 var syncmode, seekflag = false;
 var consensus = [];
+var stopcall;
 
 function updateCounter(count) {
 	connectedCounter.innerText = `CONNECTED: ${count}`;
@@ -90,6 +91,8 @@ videoPlayer.onplay = function () {
 				event: "consensus",
 				peer: peer.id
 			});
+			console.log(jsonString);
+			console.log("tranbsmitting");
 			transmitData(jsonString);
 			return;
 		}
@@ -116,6 +119,8 @@ videoPlayer.onpause = function () {
 			seekData: null,
 		}
 		var jsonString = createDataPacket(null, videoinfo);
+		console.log(jsonString);
+		console.log("tranbsmitting");
 		transmitData(jsonString);
 	} else {
 		videoControlFlag = true;
@@ -145,6 +150,8 @@ videoPlayer.onseeking = function () {
 			},
 			syncmode
 		};
+		console.log(jsonString);
+		console.log("tranbsmitting");
 		var jsonString = createDataPacket(null, videoinfo);
 		transmitData(jsonString);
 	} else {
@@ -221,6 +228,7 @@ function getAudioStream() {
 		window.stream = stream;
 	}, function (err) {
 		console.log(`ERROR GETTING STREAM`);
+		stopcall = true;
 	});
 }
 
@@ -351,7 +359,9 @@ socket.on('connect', async function () {
 		});
 
 		//CALL PEER
-		var call = await peer.call(data.peerid, window.stream);
+		if (!stopcall) {
+			var call = await peer.call(data.peerid, window.stream);
+		}
 		//CALL METHODS
 		call.on('stream', function (stream) {
 			//getCallStream(call, stream);
