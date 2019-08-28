@@ -181,16 +181,12 @@ function handleOnData(jsonString) {
 		console.log(videoinfo);
 		if (videoinfo.event === "played") {
 			videoControlFlag = false;
-			videoPlayer.play().catch(() => {
-				videoPlayer.play()
-			});
+			videoPlayer.play();
 		}
 
 		if (videoinfo.event === "paused") {
 			videoControlFlag = false;
-			videoPlayer.pause().catch(() => {
-				videoPlayer.pause()
-			});
+			videoPlayer.pause()
 		}
 
 		if (videoinfo.event === "seeked") {
