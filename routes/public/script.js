@@ -91,8 +91,7 @@ videoPlayer.onplay = function () {
 				event: "consensus",
 				peer: peer.id
 			});
-			console.log(jsonString);
-			console.log("tranbsmitting");
+
 			transmitData(jsonString);
 			return;
 		}
@@ -102,6 +101,8 @@ videoPlayer.onplay = function () {
 			pause: null,
 			seekData: null,
 		}
+		console.log(jsonString);
+		console.log("tranbsmitting");
 		var jsonString = createDataPacket(null, videoinfo);
 		transmitData(jsonString);
 	} else {
@@ -359,17 +360,18 @@ socket.on('connect', async function () {
 		});
 
 		//CALL PEER
-		if (stopcall) {
+		if (!stopcall) {
 			var call = await peer.call(data.peerid, window.stream);
-		}
-		//CALL METHODS
-		call.on('stream', function (stream) {
-			//getCallStream(call, stream);
+			//CALL METHODS
+			call.on('stream', function (stream) {
+				//getCallStream(call, stream);
 
-			//PUSH TO CALL OBJ ARRAY
-			deleteCallObj(call.peer);
-			callObjList.push(call);
-		});
+				//PUSH TO CALL OBJ ARRAY
+				deleteCallObj(call.peer);
+				callObjList.push(call);
+			});
+
+		}
 
 
 		socket.emit('returnSignal', {
