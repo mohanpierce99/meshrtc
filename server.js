@@ -7,34 +7,67 @@ let io = require("socket.io")(server);
 app.use(express.static("./"));
 
 io.on("connection", (socket) => {
+			//SOCKET HANDLING
+			io.on("connection", async (socket) => {
+				console.log("+ CONNECTED: ", socket.id);
 
-	socket.on("joinroom", (d) => {
-		console.log("new applicant")
-		console.log(d);
-		socket.room = d;
-		socket.join(d);
-		socket.emit("userstat", io.sockets.adapter.rooms[d].length);
-		console.log("Socket joined rooom : " + d);
-	});
+				//ROOM
+				socket.on("joinRoom", async (data) => {
+					socket.room = data.roomName;
+					await socket.join(socket.room);
+					io.to(socket.room).emit('roomStat', {
+						room: socket.room,
+						usercount: io.sockets.adapter.rooms[socket.room].length
+					});
+					console.log(`++  ${socket.id} JOINING |${socket.room}|`);
+				});
 
-	socket.on("signal", (obj) => {
-		console.log("Signalled" + obj.id);
-		io.sockets.in(obj.room).emit("signalnewclient", obj.id);
-	})
+				//GET SIGNAL AND EMIT TO ROOM
+				socket.on('signal', async (data) => {
+					socket.peerid = data.peerid;
+					socket.broadcast.to(socket.room).emit('newSignal', {
+						socketid: socket.id,
+						peerid: socket.peerid
+					});
+					console.log(`~~ SOCKETID: ${socket.id} | PEERID: ${socket.peerid}`)
+				});
 
-	socket.on("controls", (obj) => {
-		console.log("Server:controls");
+				socket.on('returnSignal', (data) => {
+					socket.broadcast.to(data.destSocket).emit('newReturnSignal', {
+						socketid: socket.id,
+						peerid: data.peerid
+					});
+				});
 
-		io.sockets.in(obj.room).emit("controlUpdate", obj);
-	});
+				socket.on('leaving', async (data) => {
+					socket.broadcast.to(socket.room).emit('newLeaving', {
+						leftPeerid: data.peerid
+					});
+					socket.broadcast.to(socket.room).emit('roomStat', {
+						room: socket.room,
+						usercount: io.sockets.adapter.rooms[socket.room].length - 1
+					});
+					await socket.leave(socket.room);
+					console.log(`--  ${socket.id} LEAVING |${socket.room}|`);
+				});
 
-	socket.on("disconnect", () => {
-		socket.leave(socket.room);
-		socket.emit("userstat", io.sockets.adapter.rooms[socket.room].length);
-	})
-});
+				//HANDLE DISCONNECTION
+				socket.on("disconnect", async () => {
+					if (socket.room && io.sockets.adapter.rooms[socket.room]) {
+						socket.broadcast.to(socket.room).emit('newLeaving', {
+							leftPeerid: socket.peerid
+						});
+						socket.broadcast.to(socket.room).emit('roomStat', {
+							room: socket.room,
+							usercount: io.sockets.adapter.rooms[socket.room].length
+						});
+						//await socket.leave(socket.room);
+					}
+					console.log("- DISCONNECTED: ", socket.id);
+				});
+			});
 
 
 
 
-server.listen(process.env.PORT || 3300);
+			server.listen(process.env.PORT || 3300);

@@ -45,7 +45,7 @@
             document.querySelector("#roombtn").addEventListener('click', () => {
                 var room = document.querySelector("#roomtxt").value;
 
-                socket.emit("joinroom", room);
+                socket.emit("joinRoom", room);
                 console.log("Server:controls");
                 socket.on("userstat", () => {
                     console.log("Room joined");
@@ -74,8 +74,7 @@
                         peer.id = id;
                         sel(".head").innerHTML = id;
                         socket.emit("signal", {
-                            room,
-                            id
+                            peerid: id
                         });
                     });
 
