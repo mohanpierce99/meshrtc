@@ -18,8 +18,8 @@
     <h3>Unique ID</h3>
     <h4 class="head"></h4>
     <h4>Messages : Peer to peer chat</h4>
-    <input type="text">
-    <button>Send</button>
+    <input id="sendm" type="text">
+    <button id="send">Send</button>
     <span id="conn">Connected to : </span>
     <div id="wrapper">
 
@@ -29,7 +29,7 @@
 
     </div>
 
-    <script src="https://unpkg.com/peerjs@1.0.0/dist/peerjs.min.js"></script>
+    <script src="/peermin.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var vid = document.querySelector("video");
@@ -40,26 +40,55 @@
         var manover = false;
         var seeked = false;
         var socket = io.connect(window.location.origin);
+
+
+
+        function deletePeerData(peerid) {
+            var index = -1;
+            for (var i = 0; i < mypeers.length; i++) {
+                if (mypeers[i].peerid === peerid)
+                    index = i;
+            }
+            if (index !== -1)
+                mypeers.splice(index, 1);
+        }
+
+
+
         socket.on('connect', () => {
             console.log("Connected");
             document.querySelector("#roombtn").addEventListener('click', () => {
                 var room = document.querySelector("#roomtxt").value;
 
+                if (socket.room) {
+                    messages.innerHTML = "";
+                    socket.emit('leaving', {
+                        peerid: peer.id
+                    });
+                }
+
                 socket.emit("joinRoom", room);
+
                 console.log("Server:controls");
-                socket.on("userstat", () => {
+
+                socket.on("roomJoinSuccess", () => {
                     console.log("Room joined");
                     var peer = new Peer({
+                        host: 'peerjs-server-api.herokuapp.com',
+                        secure: true,
+                        port: 443,
                         config: {
                             'iceServers': [{
-                                url: 'stun:stun.l.google.com:19302'
+                                url: 'stun:stun1.l.google.com:19302'
                             }]
                         }
-                    }, {
-                        debug: 2
                     });
+
                     peer.on("connection", (c) => {
                         sel("#conn").innerHTML += c.peer + ",";
+
+                        //PUSH CONN TO CONN LIST FINALLY
+                        deletePeerData(c.peer);
                         mypeers.push(c);
                         console.log(c);
                         console.log("pushed");
@@ -69,12 +98,13 @@
                         });
                         callPeer(c.peer);
                     });
+
                     peer.on('open', (id) => {
                         console.log("id generated");
                         peer.id = id;
                         sel(".head").innerHTML = id;
-                        socket.emit("signal", {
-                            peerid: id
+                        socket.emit('signal', {
+                            peerid: peer.id
                         });
                     });
 
@@ -92,7 +122,7 @@
                                 audio.style.display = "none";
                                 sel("#wrapper").appendChild(audio);
                                 audio.play();
-                            })
+                            });
                         })
                     }
                     peer.on('call', function (call) {
@@ -117,13 +147,13 @@
                         console.log("hittedma");
                         inject(newchip(`! Peer message, ${data}`));
                     });
-                    socket.on("signalnewclient", (d) => {
+                    socket.on("signal", (d) => {
                         console.log(d + "signalled");
-                        if (d == peer.id) {
+                        if (d.peerid == peer.id) {
                             console.log("hit oops");
                             return;
                         }
-                        var conn = peer.connect(d, {
+                        var conn = peer.connect(d.peerid, {
                             reliable: true
                         });
                         console.log("peer added");
@@ -140,8 +170,8 @@
                             });
                         });
                     });
-                    sel("button").addEventListener("click", () => {
-                        let data = sel("input").value;
+                    sel("#send").addEventListener("click", () => {
+                        let data = sel("#sendm").value;
                         inject(newchip(data));
                         mypeers.forEach((p) => {
                             p.send(data);
@@ -210,9 +240,15 @@
                     }
                 });
             });
-            socket.on('userstat', function (no) {
-                console.log(no);
-                sel("#live").innerHTML = no;
+            socket.on('userstat', function (data) {
+                console.log(data.usercount);
+                sel("#live").innerHTML = data.usercount
+            });
+
+            //DELETE LEFT USER FROM PEERSLIST
+            socket.on('newLeaving', function (data) {
+                deletePeerData(data.leftPeerid);
+                console.log(`${data.leftPeerid} LEFT THE ROOM`);
             });
         })
 
