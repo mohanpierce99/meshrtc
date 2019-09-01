@@ -117,11 +117,20 @@
                             call = peer.call(id, stream);
                             call.on('stream', (stream) => {
                                 console.log("received stream answered");
-                                var audio = document.createElement("audio");
-                                audio.srcObject = stream;
-                                audio.style.display = "none";
-                                sel("#wrapper").appendChild(audio);
-                                audio.play();
+                                // var audio = document.createElement("audio");
+                                // audio.srcObject = stream;
+                                // audio.style.display = "none";
+                                // sel("#wrapper").appendChild(audio);
+                                // audio.play();
+                                const AudioContext = window.AudioContext ||
+                                    window.webkitAudioContext;
+                                let myAudioCtx = new AudioContext();
+                                let mySource = myAudioCtx
+                                    .createMediaStreamSource(stream);
+                                let gainNode = myAudioCtx.createGain();
+                                gainNode.gain.value = 2;
+                                mySource.connect(gainNode);
+                                gainNode.connect(myAudioCtx.destination);
                             });
                         })
                     }
@@ -133,12 +142,21 @@
                             call.answer(stream);
                             call.on('stream', function (stream) {
                                 console.log("received stream");
-                                var audio = document.createElement(
-                                    "audio");
-                                audio.srcObject = stream;
-                                audio.style.display = "none";
-                                sel("#wrapper").appendChild(audio);
-                                audio.play();
+                                // var audio = document.createElement(
+                                //     "audio");
+                                // audio.srcObject = stream;
+                                // audio.style.display = "none";
+                                // sel("#wrapper").appendChild(audio);
+                                // audio.play();
+                                const AudioContext = window.AudioContext ||
+                                    window.webkitAudioContext;
+                                let myAudioCtx = new AudioContext();
+                                let mySource = myAudioCtx
+                                    .createMediaStreamSource(stream);
+                                let gainNode = myAudioCtx.createGain();
+                                gainNode.gain.value = 2;
+                                mySource.connect(gainNode);
+                                gainNode.connect(myAudioCtx.destination);
                                 inject(newchip("Done"));
                             });
                         });
