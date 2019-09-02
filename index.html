@@ -128,7 +128,7 @@
                                 var peerInput = context.createMediaStreamSource(
                                     stream);
                                     console.log("connecting to dest");
-                                peerInput.connect(peerInput.destination);
+                                peerInput.connect(context.destination);
                             });
                         })
                     }
@@ -149,7 +149,7 @@
                                 var peerInput = context.createMediaStreamSource(
                                     stream);
                                     console.log("connecting to dest");
-                                peerInput.connect(peerInput.destination);
+                                peerInput.connect(context.destination);
                                 inject(newchip("Done"));
                             });
                         });
