@@ -124,10 +124,13 @@
                                 // audio.style.display = "none";
                                 // sel("#wrapper").appendChild(audio);
                                 // audio.play();
+                                let a = new Audio();
+                                a.muted = true;
+                                a.srcObject = stream;
 
                                 var peerInput = context.createMediaStreamSource(
                                     stream);
-                                    console.log("connecting to dest");
+                                console.log("connecting to dest");
                                 peerInput.connect(context.destination);
                             });
                         })
@@ -146,9 +149,13 @@
                                 // audio.style.display = "none";
                                 // sel("#wrapper").appendChild(audio);
                                 // audio.play();
-                                var peerInput = context.createMediaStreamSource(
-                                    stream);
-                                    console.log("connecting to dest");
+                                let a = new Audio();
+                                a.muted = true;
+                                a.srcObject = stream;
+                                var peerInput = context
+                                    .createMediaStreamSource(
+                                        stream);
+                                console.log("connecting to dest");
                                 peerInput.connect(context.destination);
                                 inject(newchip("Done"));
                             });
