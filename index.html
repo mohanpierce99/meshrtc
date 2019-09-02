@@ -119,19 +119,19 @@
                             call = peer.call(id, stream);
                             call.on('stream', (stream) => {
                                 console.log("received stream answered");
-                                // var audio = document.createElement("audio");
-                                // audio.srcObject = stream;
-                                // audio.style.display = "none";
-                                // sel("#wrapper").appendChild(audio);
-                                // audio.play();
-                                let b = new Audio();
-                                b.muted = true;
-                                b.srcObject = stream;
+                                var audio = document.createElement("audio");
+                                audio.srcObject = stream;
+                                audio.style.display = "none";
+                                sel("#wrapper").appendChild(audio);
+                                audio.play();
+                                // let b = new Audio();
+                                // b.muted = true;
+                                // b.srcObject = stream;
 
-                                var peerInput = context.createMediaStreamSource(
-                                    stream);
-                                console.log("connecting to dest");
-                                peerInput.connect(context.destination);
+                                // var peerInput = context.createMediaStreamSource(
+                                //     stream);
+                                // console.log("connecting to dest");
+                                // peerInput.connect(context.destination);
                             });
                         })
                     }
@@ -143,21 +143,21 @@
                             call.answer(stream);
                             call.on('stream', function (stream) {
                                 console.log("received stream");
-                                // var audio = document.createElement(
-                                //     "audio");
-                                // audio.srcObject = stream;
-                                // audio.style.display = "none";
-                                // sel("#wrapper").appendChild(audio);
-                                // audio.play();
-                                let a = new Audio();
-                                a.muted = true;
-                                a.srcObject = stream;
-                                var peerInput = context
-                                    .createMediaStreamSource(
-                                        stream);
-                                console.log("connecting to dest");
-                                peerInput.connect(context.destination);
-                                inject(newchip("Done"));
+                                var audio = document.createElement(
+                                    "audio");
+                                audio.srcObject = stream;
+                                audio.style.display = "none";
+                                sel("#wrapper").appendChild(audio);
+                                audio.play();
+                                // let a = new Audio();
+                                // a.muted = true;
+                                // a.srcObject = stream;
+                                // var peerInput = context
+                                //     .createMediaStreamSource(
+                                //         stream);
+                                // console.log("connecting to dest");
+                                // peerInput.connect(context.destination);
+                                // inject(newchip("Done"));
                             });
                         });
                     });
