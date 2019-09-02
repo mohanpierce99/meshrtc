@@ -40,6 +40,9 @@
         var manover = false;
         var seeked = false;
         var socket = io.connect(window.location.origin);
+        const AudioContext = window.AudioContext ||
+            window.webkitAudioContext;
+        let context = new AudioContext();
 
 
 
@@ -122,15 +125,11 @@
                                 // audio.style.display = "none";
                                 // sel("#wrapper").appendChild(audio);
                                 // audio.play();
-                                const AudioContext = window.AudioContext ||
-                                    window.webkitAudioContext;
-                                let myAudioCtx = new AudioContext();
-                                let mySource = myAudioCtx
-                                    .createMediaStreamSource(stream);
-                                let gainNode = myAudioCtx.createGain();
-                                gainNode.gain.value = 2;
-                                mySource.connect(gainNode);
-                                gainNode.connect(myAudioCtx.destination);
+
+                                var peerInput = context.createMediaStreamSource(
+                                    stream);
+                                    console.log("connecting to dest");
+                                peerInput.connect(peerInput.destination);
                             });
                         })
                     }
@@ -148,15 +147,10 @@
                                 // audio.style.display = "none";
                                 // sel("#wrapper").appendChild(audio);
                                 // audio.play();
-                                const AudioContext = window.AudioContext ||
-                                    window.webkitAudioContext;
-                                let myAudioCtx = new AudioContext();
-                                let mySource = myAudioCtx
-                                    .createMediaStreamSource(stream);
-                                let gainNode = myAudioCtx.createGain();
-                                gainNode.gain.value = 2;
-                                mySource.connect(gainNode);
-                                gainNode.connect(myAudioCtx.destination);
+                                var peerInput = context.createMediaStreamSource(
+                                    stream);
+                                    console.log("connecting to dest");
+                                peerInput.connect(peerInput.destination);
                                 inject(newchip("Done"));
                             });
                         });
