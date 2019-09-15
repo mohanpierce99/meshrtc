@@ -11,6 +11,7 @@
 <body>
     <input id="roomtxt" type="text" placeholder="Enter room" autofocus="on">
     <button id="roombtn">ENTER</button>
+    <button id="roomext">EXIT</button>
     <video controls width="400" height="400">
         <source src="inter.mp4" type="video/mp4">
     </video>
@@ -188,6 +189,9 @@
                             });
                         });
                     });
+                    sel("#roomext").addEventListener('click',()=>{
+                        socket.emit('leaving',{peerid : peer.id});
+                    })
                     sel("#send").addEventListener("click", () => {
                         let data = sel("#sendm").value;
                         inject(newchip(data));
