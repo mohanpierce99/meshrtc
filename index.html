@@ -34,7 +34,6 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var vid = document.querySelector("video");
-        var mypeers = [];
         var room;
         var gate = true;
         var manover = false;
@@ -46,14 +45,9 @@
 
 
 
-        function deletePeerData(peerid) {
-            var index = -1;
-            for (var i = 0; i < mypeers.length; i++) {
-                if (mypeers[i].peerid === peerid)
-                    index = i;
-            }
-            if (index !== -1)
-                mypeers.splice(index, 1);
+        function deletePeerData(peerid, mypeers) {
+            console.log(peerid,mypeers.filter(x => x.peer != peerid),"checkyu");
+            return mypeers.filter(x => x.peer != peerid);
         }
 
 
@@ -77,7 +71,8 @@
                 socket.on("roomJoinSuccess", () => {
                     console.log("Room joined");
                     var peer = new Peer({
-                        host: 'peerjs-server-api.herokuapp.com',
+                        host: "peerjs-server-api.herokuapp.com",
+                        path: "/peer",
                         secure: true,
                         port: 443,
                         config: {
@@ -86,12 +81,14 @@
                             }]
                         }
                     });
+                    var callStreams = [];
+                    var mypeers = [];
+
 
                     peer.on("connection", (c) => {
                         sel("#conn").innerHTML += c.peer + ",";
-
                         //PUSH CONN TO CONN LIST FINALLY
-                        deletePeerData(c.peer);
+                        mypeers=deletePeerData(c.peer, mypeers);
                         mypeers.push(c);
                         console.log(c);
                         console.log("pushed");
@@ -111,13 +108,18 @@
                         });
                     });
 
-                    function callPeer(id) {
-                        console.log(id + "call");
-                        var call;
+                    function callPeer(id) { //call skype
                         navigator.mediaDevices.getUserMedia({
-                            audio: true,
-                        }).then((stream) => {
-                            call = peer.call(id, stream);
+                            audio: true
+                        }).then(stream => {
+                            callStreams.push(stream);
+                            console.log(id + "call", stream);
+                            var call = peer.call(id, stream);
+                            var callpeer = mypeers.filter(x => x.peer == call.peer)[0];
+                            if (callpeer) {
+                                callpeer.call = call;
+                                console.log("call object injected");
+                            }
                             call.on('stream', (stream) => {
                                 console.log("received stream answered");
                                 var audio = document.createElement("audio");
@@ -125,22 +127,22 @@
                                 audio.style.display = "none";
                                 sel("#wrapper").appendChild(audio);
                                 audio.play();
-                                // let b = new Audio();
-                                // b.muted = true;
-                                // b.srcObject = stream;
-
-                                // var peerInput = context.createMediaStreamSource(
-                                //     stream);
-                                // console.log("connecting to dest");
-                                // peerInput.connect(context.destination);
                             });
-                        })
+                        });
+
                     }
+
                     peer.on('call', function (call) {
-                        inject(newchip("call received"));
+                        var callpeer = mypeers.filter(x => x.peer == call.peer)[0];
+                        if (callpeer) {
+                            callpeer.call = call;
+                            console.log("call object injected after receiuvingli");
+                        }
                         navigator.mediaDevices.getUserMedia({
-                            audio: true,
-                        }).then((stream) => {
+                            audio: true
+                        }).then(stream => {
+                            callStreams.push(stream);
+                            inject(newchip("call received"));
                             call.answer(stream);
                             call.on('stream', function (stream) {
                                 console.log("received stream");
@@ -150,18 +152,11 @@
                                 audio.style.display = "none";
                                 sel("#wrapper").appendChild(audio);
                                 audio.play();
-                                // let a = new Audio();
-                                // a.muted = true;
-                                // a.srcObject = stream;
-                                // var peerInput = context
-                                //     .createMediaStreamSource(
-                                //         stream);
-                                // console.log("connecting to dest");
-                                // peerInput.connect(context.destination);
-                                // inject(newchip("Done"));
                             });
                         });
                     });
+
+
                     peer.on('data', function (data) {
                         console.log("hittedma");
                         inject(newchip(`! Peer message, ${data}`));
@@ -189,9 +184,7 @@
                             });
                         });
                     });
-                    sel("#roomext").addEventListener('click',()=>{
-                        socket.emit('leaving',{peerid : peer.id});
-                    })
+
                     sel("#send").addEventListener("click", () => {
                         let data = sel("#sendm").value;
                         inject(newchip(data));
@@ -199,7 +192,21 @@
                             p.send(data);
                             console.log("Sent data to" + p.peer);
                         });
-                    })
+                    });
+
+                    sel("#roomext").addEventListener('click', () => {
+                        mypeers.forEach(x => {
+                            x.call.close();
+                            x.close();
+                        });
+                        callStreams.forEach(micstream => {
+                            micstream.getTracks().forEach(x => x.stop());
+                        });
+                        socket.emit('leaving', {
+                            peerid: peer.id
+                        });
+                    });
+
                     vid.addEventListener("pause", () => {
                         if (manover || seeked) {
                             manover = false;
@@ -226,6 +233,23 @@
                             room,
                             currentTime: vid.currentTime
                         });
+                    });
+
+                    socket.on('userstat', function (data) {
+                        console.log(data.usercount);
+                        sel("#live").innerHTML = data.usercount
+                    });
+
+                    //DELETE LEFT USER FROM PEERSLIST
+                    socket.on('newLeaving', function (data) {
+                        console.log(mypeers);
+                        mypeers.filter(x =>{console.log(x.peer,data.leftPeerid); return x.peer == data.leftPeerid})[0].call.close();
+                        mypeers=deletePeerData(data.leftPeerid, mypeers);
+                        console.log(mypeers);
+                        console.log(`${data.leftPeerid} LEFT THE ROOM`);
+                        console.log("dfjdkgfj", mypeers.filter(x => x.peer == data
+                            .leftPeerid)[0]);
+                        console.log(mypeers);
                     });
                 });
                 vid.addEventListener("seeked", () => {
@@ -262,16 +286,7 @@
                     }
                 });
             });
-            socket.on('userstat', function (data) {
-                console.log(data.usercount);
-                sel("#live").innerHTML = data.usercount
-            });
 
-            //DELETE LEFT USER FROM PEERSLIST
-            socket.on('newLeaving', function (data) {
-                deletePeerData(data.leftPeerid);
-                console.log(`${data.leftPeerid} LEFT THE ROOM`);
-            });
         })
 
         function newchip(d) {
