@@ -54,6 +54,8 @@
 
         socket.on('connect', () => {
             console.log("Connected");
+            socket.emit("onlineStatus","false is gay");
+            socket.on("onlineStatus",console.log);
             document.querySelector("#roombtn").addEventListener('click', () => {
                 var room = document.querySelector("#roomtxt").value;
 
@@ -63,7 +65,7 @@
                         peerid: peer.id
                     });
                 }
-
+                socket.removeAllListeners();
                 socket.emit("joinRoom", room);
 
                 console.log("Server:controls");
@@ -205,6 +207,7 @@
                         socket.emit('leaving', {
                             peerid: peer.id
                         });
+                        peer.destroy();
                     });
 
                     vid.addEventListener("pause", () => {
@@ -242,14 +245,12 @@
 
                     //DELETE LEFT USER FROM PEERSLIST
                     socket.on('newLeaving', function (data) {
-                        console.log(mypeers);
-                        mypeers.filter(x =>{console.log(x.peer,data.leftPeerid); return x.peer == data.leftPeerid})[0].call.close();
+                        if(mypeers.find(x=>x.peer==data.leftPeerid))
+                        {
+                        mypeers.filter(x =>{return x.peer == data.leftPeerid})[0].call.close();
                         mypeers=deletePeerData(data.leftPeerid, mypeers);
-                        console.log(mypeers);
-                        console.log(`${data.leftPeerid} LEFT THE ROOM`);
-                        console.log("dfjdkgfj", mypeers.filter(x => x.peer == data
-                            .leftPeerid)[0]);
-                        console.log(mypeers);
+                        }
+                        console.log(`${data.leftPeerid} LEFT THE ROOM`);                      
                     });
                 });
                 vid.addEventListener("seeked", () => {

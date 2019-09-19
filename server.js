@@ -7,7 +7,8 @@ let io = require("socket.io")(server);
 
 app.get("inter.mp4",(req,res)=>{
 	fs.createReadStream("./inter.mp4").pipe(res);
-})
+});
+
 app.use(express.static("./"));
 
 io.on("connection", (socket) => {

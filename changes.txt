@@ -1,0 +1,94 @@
+ socket.on('newLeaving', function (data) {
+                        if(mypeers.find(x=>x.peer==data.leftPeerid))
+                        {
+                        mypeers.filter(x =>{return x.peer == data.leftPeerid})[0].call.close();
+                        mypeers=deletePeerData(data.leftPeerid, mypeers);
+                        }
+                        console.log(`${data.leftPeerid} LEFT THE ROOM`);                      
+                    });
+
+
+                    sel("#roomext").addEventListener('click', () => {
+                        mypeers.forEach(x => {
+                            x.call.close();
+                            x.close();
+                        });
+                        callStreams.forEach(micstream => {
+                            micstream.getTracks().forEach(x => x.stop());
+                        });
+                        socket.emit('leaving', {
+                            peerid: peer.id
+                        });
+                        peer.destroy();
+                    });
+
+
+   function callPeer(id) { //call skype
+                        navigator.mediaDevices.getUserMedia({
+                            audio: true
+                        }).then(stream => {
+                           =====> callStreams.push(stream);
+                            console.log(id + "call", stream);
+                            var call = peer.call(id, stream);
+                            var callpeer = mypeers.filter(x => x.peer == call.peer)[0];
+                            if (callpeer) {
+                                callpeer.call = call;
+                                console.log("call object injected");
+                            }
+                            call.on('stream', (stream) => {
+                                console.log("received stream answered");
+                                var audio = document.createElement("audio");
+                                audio.srcObject = stream;
+                                audio.style.display = "none";
+                                sel("#wrapper").appendChild(audio);
+                                audio.play();
+                            });
+                        });
+                    }
+
+
+                       peer.on('call', function (call) {
+        ===>                var callpeer = mypeers.filter(x => x.peer == call.peer)[0];
+           ===>                if (callpeer) {
+          ===>                     callpeer.call = call;
+            ===>                   console.log("call object injected after receiuvingli");
+                        }
+                        navigator.mediaDevices.getUserMedia({
+                            audio: true
+                        }).then(stream => {
+                 ===>              callStreams.push(stream);
+                            inject(newchip("call received"));
+                            call.answer(stream);
+                            call.on('stream', function (stream) {
+                                console.log("received stream");
+                                var audio = document.createElement(
+                                    "audio");
+                                audio.srcObject = stream;
+                                audio.style.display = "none";
+                                sel("#wrapper").appendChild(audio);
+                                audio.play();
+                            });
+                        });
+                    });
+
+
+                     }
+
+
+                ===> socket.removeAllListeners();
+                socket.emit("joinRoom", room);
+
+
+                 var peer = new Peer({
+                        host: "peerjs-server-api.herokuapp.com",
+                        path: "/peer",
+                        secure: true,
+                        port: 443,
+                        config: {
+                            'iceServers': [{
+                                url: 'stun:stun1.l.google.com:19302'
+                            }]
+                        }
+                    });
+               ==>     var callStreams = [];
+                    var mypeers = [];
